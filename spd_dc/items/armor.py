@@ -2,11 +2,16 @@ from math import sqrt
 
 from spd_dc.aliases import ArmorAugment
 from spd_dc.config import ArmorConfig
-from spd_dc.items.base import Item
 from spd_dc.math import Dud, Pmf
+
+from .base import Item
 
 
 class Armor(Item[ArmorAugment]):
+    def __init__(self, tier: int, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.tier = tier
+
     @classmethod
     def from_config(cls, config: ArmorConfig | None) -> "Armor | None":
         if config is None:

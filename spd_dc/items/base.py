@@ -6,14 +6,14 @@ from spd_dc.math import Dud, Pmf
 
 
 class Item[T: ArmorAugment | WeaponAugment](ABC):
+    tier: int
+
     def __init__(
         self,
-        tier: int,
         level: int = 0,
         augment: T = None,  # ty: ignore[invalid-parameter-default]
         mastered: bool = False,
     ) -> None:
-        self.tier = tier
         self.level = level
         self.augment = augment
         self.mastered = mastered

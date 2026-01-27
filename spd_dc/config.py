@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from spd_dc.aliases import ArmorAugment, WeaponAugment, WeaponKind
+from .aliases import ArmorAugment, WeaponAugment, WeaponKind
 
 ROOT_DIR = Path(__file__).parent.parent.absolute()
 
