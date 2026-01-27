@@ -21,7 +21,7 @@ class WeaponConfig(BaseModel):
 
 
 class ArmorConfig(BaseModel):
-    tier: int = Field(default=1, ge=1, le=5)
+    tier: int = Field(ge=1, le=5)
     level: int = Field(default=0, ge=0)
     augment: ArmorAugment = None
     mastered = False
