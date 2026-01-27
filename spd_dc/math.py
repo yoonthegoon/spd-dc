@@ -13,7 +13,25 @@ class Pmf(defaultdict[int, float]):
         self.normalize()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(mean={self.mean:.2f}, std_dev={self.std_dev:.2f})"
+        cmf = defaultdict(float)
+        acc = 0
+        for x, p in sorted(self.items()):
+            acc += p
+            cmf[x] += acc
+
+        def percentiles(percentiles: list[float], tolerance: float = 1e-9) -> list[int]:
+            result = []
+            percentiles = sorted(percentiles)
+            for x, c in sorted(cmf.items()):
+                if c >= percentiles[0] - tolerance:
+                    result.append(x)
+                    percentiles.pop(0)
+                if len(percentiles) == 0:
+                    break
+            return result
+
+        q1, median, q3 = percentiles([0.25, 0.5, 0.75])
+        return f"{self.__class__.__name__}(min={self.min}, q1={q1}, median={median}, q3={q3}, max={self.max})"
 
     def __add__(self, other: "Pmf") -> "Pmf":
         if not isinstance(other, Pmf):
@@ -21,7 +39,9 @@ class Pmf(defaultdict[int, float]):
                 f"unsupported operand type(s) for +: 'Pmf' and '{type(other)}'"
             )
         if not (self.is_normal and other.is_normal):
-            raise ValueError("cannot add non-normal distributions")
+            self.normalize()
+            other.normalize()
+            # raise ValueError("cannot add non-normal distributions")
 
         result = Pmf()
 
@@ -37,7 +57,9 @@ class Pmf(defaultdict[int, float]):
                 f"unsupported operand type(s) for -: 'Pmf' and '{type(other)}'"
             )
         if not (self.is_normal and other.is_normal):
-            raise ValueError("cannot add non-normal distributions")
+            self.normalize()
+            other.normalize()
+            # raise ValueError("cannot subtract non-normal distributions")
 
         result = Pmf()
 
@@ -60,7 +82,7 @@ class Pmf(defaultdict[int, float]):
 
         return result
 
-    def clamped(self, *, a: int | None = None, b: int | None = None) -> "Pmf":
+    def clamped(self, a: int | None = None, b: int | None = None) -> "Pmf":
         result = self.copy()
         for x, p in self.items():
             if a is not None and x < a:
@@ -78,6 +100,11 @@ class Pmf(defaultdict[int, float]):
         total = self.total
         for x in self:
             self[x] /= total
+        # if not self.is_normal:
+        #     try:
+        #         return self.normalize()
+        #     except RecursionError:
+        #         return self
         return self
 
     @property
