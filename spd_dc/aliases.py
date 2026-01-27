@@ -5,7 +5,7 @@ ArmorAugment = Literal["defense", "evasion"] | None
 WeaponAugment = Literal["damage", "speed"] | None
 
 WeaponKind = Literal[
-    "worn shortsowrd",
+    "worn shortsword",
     "mage's staff",
     "dagger",
     "studded gloves",

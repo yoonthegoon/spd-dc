@@ -24,7 +24,7 @@ class ArmorConfig(BaseModel):
     tier: int = Field(ge=1, le=5)
     level: int = Field(default=0, ge=0)
     augment: ArmorAugment = None
-    mastered = False
+    mastered: bool = False
 
 
 class Config(BaseModel):
