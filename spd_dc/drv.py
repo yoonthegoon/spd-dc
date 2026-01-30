@@ -1,0 +1,96 @@
+from collections import defaultdict
+from typing import Annotated
+
+import numpy as np
+import numpy.typing as npt
+from matplotlib import pyplot as plt
+from scipy.signal import convolve
+from scipy.stats import rv_discrete
+
+Pk = Annotated[npt.NDArray[np.float64], "shape: tuple[int]"]
+Xk = Annotated[npt.NDArray[np.int64], "shape: tuple[int]"]
+
+
+def add(lhs: rv_discrete, rhs: rv_discrete) -> rv_discrete:
+    lhs_xk, rhs_xk = map(get_xk, (lhs, rhs))
+
+    lhs_pk = get_pk(lhs, lhs_xk)
+    rhs_pk = get_pk(rhs, rhs_xk)
+
+    xk = np.arange(lhs.a + rhs.a, lhs.b + rhs.b + 1, dtype=np.int64)
+    pk = convolve(lhs_pk, rhs_pk)
+
+    return rv_discrete(values=(xk, pk))
+
+
+def add_probabilities(drv: rv_discrete, xk: list[int], pk: list[float]) -> rv_discrete:
+    drv_xk = get_xk(drv)
+    drv_pk = get_pk(drv, drv_xk) * (1 - sum(pk))
+    dd = defaultdict(float, zip(drv_xk, drv_pk))
+    for x, p in zip(xk, pk):
+        dd[x] += p
+    new_xk = list(dd.keys())
+    new_pk = list(dd.values())
+    return rv_discrete(values=(new_xk, new_pk))
+
+
+def clamp(drv: rv_discrete, a: int | None = None, b: int | None = None) -> rv_discrete:
+    xk = get_xk(drv)
+    pk = get_pk(drv, xk)
+
+    dd = defaultdict(float)
+
+    for x, p in zip(xk, pk):
+        if a is not None and x < a:
+            dd[a] += p
+        elif b is not None and x > b:
+            dd[b] += p
+        else:
+            dd[x] += p
+
+    new_xk = list(dd.keys())
+    new_pk = list(dd.values())
+
+    return rv_discrete(values=(new_xk, new_pk))
+
+
+def constant(x: int) -> rv_discrete:
+    return rv_discrete(values=(x, 1.0))
+
+
+def get_pk(drv: rv_discrete, k: Xk) -> Pk:
+    return drv.pmf(k)
+
+
+def get_xk(drv: rv_discrete) -> Xk:
+    if drv.a is None or drv.b is None:
+        raise ValueError
+    return np.arange(drv.a, drv.b + 1, dtype=np.int64)
+
+
+def negative(drv: rv_discrete) -> rv_discrete:
+    xk = get_xk(drv)
+    pk = get_pk(drv, xk)
+    return rv_discrete(a=-drv.b, values=(np.negative(xk), pk))
+
+
+def show(drv: rv_discrete, title: str = "", xlabel: str = "", ylabel: str = "") -> None:
+    xk = get_xk(drv)
+    pk = get_pk(drv, xk)
+
+    fig, ax = plt.subplots()
+    ax.bar(xk, pk)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.show()
+
+
+def sub(lhs: rv_discrete, rhs: rv_discrete) -> rv_discrete:
+    return add(lhs, negative(rhs))
+
+
+def uniform(a: int, b: int) -> rv_discrete:
+    xk = np.arange(a, b + 1, dtype=np.int64)
+    pk = np.full(xk.shape, 1 / xk.size)
+    return rv_discrete(values=(xk, pk))
