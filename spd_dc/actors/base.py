@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 
-from scipy.stats import rv_discrete
-
-from spd_dc.drv import add_probabilities, clamp, sub
+from spd_dc.drv import Drv, add_probabilities, clamp, sub
 
 
 class Actor(ABC):
@@ -14,17 +12,17 @@ class Actor(ABC):
 
     @property
     @abstractmethod
-    def attack(self) -> rv_discrete: ...
+    def attack(self) -> Drv: ...
 
     @property
     @abstractmethod
-    def defense(self) -> rv_discrete: ...
+    def defense(self) -> Drv: ...
 
     @property
     @abstractmethod
     def evasion(self) -> int: ...
 
-    def damage_rv(self, other: "Actor") -> rv_discrete:
+    def damage_rv(self, other: "Actor") -> Drv:
         q = 1 - self.hit_probability(other)
         hit_rv = self.hit_rv(other)
         return add_probabilities(hit_rv, [0], [q])
@@ -41,7 +39,7 @@ class Actor(ABC):
         hit_rv = self.hit_rv(other)
         return hit_rv.mean()
 
-    def hit_rv(self, other: "Actor") -> rv_discrete:
+    def hit_rv(self, other: "Actor") -> Drv:
         return clamp(sub(self.attack, other.defense), 0)
 
     def hit_probability(self, other: "Actor") -> float:

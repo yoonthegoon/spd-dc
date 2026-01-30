@@ -7,11 +7,12 @@ from matplotlib import pyplot as plt
 from scipy.signal import convolve
 from scipy.stats import rv_discrete
 
+Drv = rv_discrete
 Pk = Annotated[npt.NDArray[np.float64], "shape: tuple[int]"]
 Xk = Annotated[npt.NDArray[np.int64], "shape: tuple[int]"]
 
 
-def add(lhs: rv_discrete, rhs: rv_discrete) -> rv_discrete:
+def add(lhs: Drv, rhs: Drv) -> Drv:
     lhs_xk, rhs_xk = map(get_xk, (lhs, rhs))
 
     lhs_pk = get_pk(lhs, lhs_xk)
@@ -20,10 +21,10 @@ def add(lhs: rv_discrete, rhs: rv_discrete) -> rv_discrete:
     xk = np.arange(lhs.a + rhs.a, lhs.b + rhs.b + 1, dtype=np.int64)
     pk = convolve(lhs_pk, rhs_pk)
 
-    return rv_discrete(values=(xk, pk))
+    return Drv(values=(xk, pk))
 
 
-def add_probabilities(drv: rv_discrete, xk: list[int], pk: list[float]) -> rv_discrete:
+def add_probabilities(drv: Drv, xk: list[int], pk: list[float]) -> Drv:
     drv_xk = get_xk(drv)
     drv_pk = get_pk(drv, drv_xk) * (1 - sum(pk))
     dd = defaultdict(float, zip(drv_xk, drv_pk))
@@ -31,10 +32,10 @@ def add_probabilities(drv: rv_discrete, xk: list[int], pk: list[float]) -> rv_di
         dd[x] += p
     new_xk = list(dd.keys())
     new_pk = list(dd.values())
-    return rv_discrete(values=(new_xk, new_pk))
+    return Drv(values=(new_xk, new_pk))
 
 
-def clamp(drv: rv_discrete, a: int | None = None, b: int | None = None) -> rv_discrete:
+def clamp(drv: Drv, a: int | None = None, b: int | None = None) -> Drv:
     xk = get_xk(drv)
     pk = get_pk(drv, xk)
 
@@ -51,30 +52,30 @@ def clamp(drv: rv_discrete, a: int | None = None, b: int | None = None) -> rv_di
     new_xk = list(dd.keys())
     new_pk = list(dd.values())
 
-    return rv_discrete(values=(new_xk, new_pk))
+    return Drv(values=(new_xk, new_pk))
 
 
-def constant(x: int) -> rv_discrete:
-    return rv_discrete(values=(x, 1.0))
+def constant(x: int) -> Drv:
+    return Drv(values=(x, 1.0))
 
 
-def get_pk(drv: rv_discrete, k: Xk) -> Pk:
+def get_pk(drv: Drv, k: Xk) -> Pk:
     return drv.pmf(k)
 
 
-def get_xk(drv: rv_discrete) -> Xk:
+def get_xk(drv: Drv) -> Xk:
     if drv.a is None or drv.b is None:
         raise ValueError
     return np.arange(drv.a, drv.b + 1, dtype=np.int64)
 
 
-def negative(drv: rv_discrete) -> rv_discrete:
+def negative(drv: Drv) -> Drv:
     xk = get_xk(drv)
     pk = get_pk(drv, xk)
-    return rv_discrete(a=-drv.b, values=(np.negative(xk), pk))
+    return Drv(a=-drv.b, values=(np.negative(xk), pk))
 
 
-def show(drv: rv_discrete, title: str = "", xlabel: str = "", ylabel: str = "") -> None:
+def show(drv: Drv, title: str = "", xlabel: str = "", ylabel: str = "") -> None:
     xk = get_xk(drv)
     pk = get_pk(drv, xk)
 
@@ -86,11 +87,11 @@ def show(drv: rv_discrete, title: str = "", xlabel: str = "", ylabel: str = "") 
     plt.show()
 
 
-def sub(lhs: rv_discrete, rhs: rv_discrete) -> rv_discrete:
+def sub(lhs: Drv, rhs: Drv) -> Drv:
     return add(lhs, negative(rhs))
 
 
-def uniform(a: int, b: int) -> rv_discrete:
+def uniform(a: int, b: int) -> Drv:
     xk = np.arange(a, b + 1, dtype=np.int64)
     pk = np.full(xk.shape, 1 / xk.size)
-    return rv_discrete(values=(xk, pk))
+    return Drv(values=(xk, pk))

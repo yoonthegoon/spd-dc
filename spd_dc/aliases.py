@@ -28,7 +28,7 @@ WeaponKind = Literal[
     "battle axe",
     "flail",
     "runic blade",
-    "assasin's blade",
+    "assassin's blade",
     "crossbow",
     "katana",
     "greatsword",
