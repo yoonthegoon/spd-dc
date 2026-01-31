@@ -3,7 +3,6 @@ from typing import Annotated
 
 import numpy as np
 import numpy.typing as npt
-from matplotlib import pyplot as plt
 from scipy.signal import convolve
 from scipy.stats import rv_discrete
 
@@ -60,7 +59,7 @@ def constant(x: int) -> Drv:
 
 
 def get_pk(drv: Drv, k: Xk) -> Pk:
-    return drv.pmf(k)
+    return drv.pmf(k)  # noqa: Expected type 'ndarray[tuple[Any, ...], dtype[float64]]', got 'float | float64' instead
 
 
 def get_xk(drv: Drv) -> Xk:
@@ -73,18 +72,6 @@ def negative(drv: Drv) -> Drv:
     xk = get_xk(drv)
     pk = get_pk(drv, xk)
     return Drv(a=-drv.b, values=(np.negative(xk), pk))
-
-
-def show(drv: Drv, title: str = "", xlabel: str = "", ylabel: str = "") -> None:
-    xk = get_xk(drv)
-    pk = get_pk(drv, xk)
-
-    fig, ax = plt.subplots()
-    ax.bar(xk, pk)
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    plt.show()
 
 
 def sub(lhs: Drv, rhs: Drv) -> Drv:

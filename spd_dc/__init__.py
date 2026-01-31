@@ -2,12 +2,8 @@ from spd_dc.actors.base import Actor
 from spd_dc.actors.enemy import Enemy
 from spd_dc.actors.hero import Hero
 from spd_dc.config import get_config
-from spd_dc.drv import show
 
 config = get_config()
 hero = Hero.from_config(config)
 _enemy = Enemy.from_config(config.enemy)
 enemy: Actor = hero if _enemy is None else _enemy
-
-
-__all__ = [config, enemy, hero, show]
