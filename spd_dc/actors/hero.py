@@ -1,7 +1,8 @@
 from spd_dc.config import Config
-from spd_dc.drv import Drv, add, constant, uniform
+from spd_dc.drv import Drv, add, add_probabilities, constant, uniform
 from spd_dc.items import weapons
 from spd_dc.items.armor import Armor
+from spd_dc.items.trinket import Trinket
 from spd_dc.items.weapons.base import Weapon
 
 from .base import Actor
@@ -14,21 +15,25 @@ class Hero(Actor):
         strength: int = 10,
         weapon: Weapon | None = None,
         armor: Armor | None = None,
+        trinket: Trinket | None = None,
     ) -> None:
         self.level = level
         self._strength = strength
         self.weapon = weapon
         self.armor = armor
+        self.trinket = trinket
 
     @classmethod
     def from_config(cls, config: Config) -> "Hero":
         weapon = weapons.from_config(config.weapon)
         armor = Armor.from_config(config.armor)
+        trinket = Trinket.from_config(config.trinket)
         return cls(
             level=config.hero.level,
             strength=config.hero.strength,
             weapon=weapon,
             armor=armor,
+            trinket=trinket,
         )
 
     @property
@@ -49,6 +54,11 @@ class Hero(Actor):
             attack = self.weapon.attack
             if self.strength > self.weapon.strength:
                 attack = add(attack, uniform(0, self.strength - self.weapon.strength))
+        if self.trinket is not None and self.trinket.kind == "thirteen leaf clover":
+            weight = self.trinket.level + 1
+            attack = add_probabilities(
+                attack, list(map(int, attack.support())), [0.1 * weight, 0.15 * weight]
+            )
         return attack
 
     @property
@@ -82,6 +92,8 @@ class Hero(Actor):
             if self.strength < self.armor.strength:
                 evasion /= 1.5 ** (self.armor.strength - self.strength)
             evasion += self.armor.evasion
+        if self.trinket is not None and self.trinket.kind == "ferret tuft":
+            evasion *= 1 + 0.125 * self.trinket.level
         return max(1, round(evasion))
 
     @property

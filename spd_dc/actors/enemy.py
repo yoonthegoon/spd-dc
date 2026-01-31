@@ -1,5 +1,6 @@
-from spd_dc.config import EnemyConfig
+from spd_dc.config import Config
 from spd_dc.drv import Drv, uniform
+from spd_dc.items.trinket import Trinket
 
 from .base import Actor
 
@@ -19,12 +20,15 @@ class Enemy(Actor):
         self._defense = defense
         self._evasion = evasion
         self.delay = delay
+        self.trinket: Trinket | None = None
 
     @classmethod
-    def from_config(cls, config: EnemyConfig | None) -> "Enemy | None":
-        if config is None:
+    def from_config(cls, config: Config) -> "Enemy | None":
+        if config.enemy is None:
             return None
-        return cls(**config.model_dump())
+        enemy = cls(**config.enemy.model_dump())
+        enemy.trinket = Trinket.from_config(config.trinket)
+        return enemy
 
     @property
     def accuracy(self) -> int:
@@ -42,4 +46,7 @@ class Enemy(Actor):
 
     @property
     def evasion(self) -> int:
-        return self._evasion
+        evasion = self._evasion
+        if self.trinket is not None and self.trinket.kind == "ferret tuft":
+            evasion *= 1 + 0.125 * self.trinket.level
+        return int(evasion)

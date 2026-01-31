@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from .aliases import ArmorAugment, WeaponAugment, WeaponKind
+from .aliases import ArmorAugment, TrinketKind, WeaponAugment, WeaponKind
 
 ROOT_DIR = Path(__file__).parent.parent.absolute()
 
@@ -43,11 +43,17 @@ class EnemyConfig(BaseModel):
         return value
 
 
+class TrinketConfig(BaseModel):
+    kind: TrinketKind
+    level: int = Field(default=0, ge=0, le=3)
+
+
 class Config(BaseModel):
     hero: HeroConfig = HeroConfig()
     weapon: WeaponConfig | None = None
     armor: ArmorConfig | None = None
     enemy: EnemyConfig | None = None
+    trinket: TrinketConfig | None = None
 
 
 def get_config(file: Path = ROOT_DIR / "config.toml") -> Config:

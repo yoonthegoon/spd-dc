@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Collection
 
 from numpy import arange, dtype, float64, full, int64, ndarray
 from numpy import negative as np_negative
@@ -22,7 +23,9 @@ def add(lhs: Drv, rhs: Drv) -> Drv:
     return Drv(values=(xk, pk))
 
 
-def add_probabilities(drv: Drv, xk: list[int], pk: list[float]) -> Drv:
+def add_probabilities(drv: Drv, xk: Collection[int], pk: Collection[float]) -> Drv:
+    if len(xk) != len(pk):
+        raise ValueError
     drv_xk = get_xk(drv)
     drv_pk = get_pk(drv, drv_xk) * (1 - sum(pk))
     dd = defaultdict(float, zip(drv_xk, drv_pk))

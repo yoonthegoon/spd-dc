@@ -2,6 +2,8 @@ from typing import Literal
 
 ArmorAugment = Literal["defense", "evasion"] | None
 
+TrinketKind = Literal["thirteen leaf clover", "ferret tuft"]
+
 WeaponAugment = Literal["damage", "speed"] | None
 
 WeaponKind = Literal[
