@@ -1,14 +1,13 @@
 from collections import defaultdict
-from typing import Annotated
 
-import numpy as np
-import numpy.typing as npt
+from numpy import arange, dtype, float64, full, int64, ndarray
+from numpy import negative as np_negative
 from scipy.signal import convolve
 from scipy.stats import rv_discrete
 
 Drv = rv_discrete
-Pk = Annotated[npt.NDArray[np.float64], "shape: tuple[int]"]
-Xk = Annotated[npt.NDArray[np.int64], "shape: tuple[int]"]
+Pk = ndarray[tuple[int], dtype[float64]]
+Xk = ndarray[tuple[int], dtype[int64]]
 
 
 def add(lhs: Drv, rhs: Drv) -> Drv:
@@ -17,7 +16,7 @@ def add(lhs: Drv, rhs: Drv) -> Drv:
     lhs_pk = get_pk(lhs, lhs_xk)
     rhs_pk = get_pk(rhs, rhs_xk)
 
-    xk = np.arange(lhs.a + rhs.a, lhs.b + rhs.b + 1, dtype=np.int64)
+    xk = arange(lhs.a + rhs.a, lhs.b + rhs.b + 1, dtype=int64)
     pk = convolve(lhs_pk, rhs_pk)
 
     return Drv(values=(xk, pk))
@@ -58,20 +57,20 @@ def constant(x: int) -> Drv:
     return Drv(values=(x, 1.0))
 
 
-def get_pk(drv: Drv, k: Xk) -> Pk:
-    return drv.pmf(k)  # noqa: Expected type 'ndarray[tuple[Any, ...], dtype[float64]]', got 'float | float64' instead
+def get_pk(drv: Drv, xk: Xk) -> Pk:
+    return drv.pmf(xk)  # noqa Expected type 'ndarray[tuple[Any, ...], dtype[float64]]', got 'float | float64' instead
 
 
 def get_xk(drv: Drv) -> Xk:
     if drv.a is None or drv.b is None:
         raise ValueError
-    return np.arange(drv.a, drv.b + 1, dtype=np.int64)
+    return arange(drv.a, drv.b + 1, dtype=int64)
 
 
 def negative(drv: Drv) -> Drv:
     xk = get_xk(drv)
     pk = get_pk(drv, xk)
-    return Drv(a=-drv.b, values=(np.negative(xk), pk))
+    return Drv(a=-drv.b, values=(np_negative(xk), pk))
 
 
 def sub(lhs: Drv, rhs: Drv) -> Drv:
@@ -79,6 +78,6 @@ def sub(lhs: Drv, rhs: Drv) -> Drv:
 
 
 def uniform(a: int, b: int) -> Drv:
-    xk = np.arange(a, b + 1, dtype=np.int64)
-    pk = np.full(xk.shape, 1 / xk.size)
+    xk = arange(a, b + 1, dtype=int64)
+    pk = full(xk.shape, 1 / xk.size)
     return Drv(values=(xk, pk))
